@@ -11,23 +11,24 @@ sample_names = []
 sample_list = os.listdir(sample_dir)
 for i in range(len(sample_list)):
     sample = sample_list[i]
-    if sample.endswith("_1.fq.gz"):
-        samples = sample.split("_1.fq")[0]
+    if sample.endswith("_1.fastq.gz"):
+        samples = sample.split("_1.fastq")[0]
         sample_names.append(samples)
         #print(sample_names)
 
 rule all:
-    input:
+    input:"results/01_multiqc/multiqc_report.html",
+        "results/04_ATmultiqc/multiqc_report.html",
+        expand("results/04_bwa/alignment/{names}.sam", names=sample_names)
+        
 
 rule fastqc: 
     input:
-        "data//{names}_{con}.fq.gz"
+        "data/{names}_{con}.fastq.gz"
     output:
         result = directory("results/00_fastqc/{names}_{con}_fastqc/")
     log:
         "logs/fastqc_{names}_{con}.log"
-    conda:
-        "envs/fastqc.yaml"
     params:
         extra="-t 32"
     shell:
@@ -43,8 +44,6 @@ rule multiqc:
         result = directory("results/01_multiqc/")  
     log:
         "logs/multiqc.log"
-    conda:
-        "envs/multiqc.yaml"
     shell:
         """
         multiqc results/00_fastqc/ -o {output.result} 2>> {log}
@@ -52,20 +51,80 @@ rule multiqc:
 
 rule Fastp:
     input:
-        first = "data/{names}_1.fq.gz",
-        second = "data/{names}_2.fq.gz"
+        first = "data/{names}_1.fastq.gz",
+        second = "data/{names}_2.fastq.gz"
     output:
-        first = "results/04_fastp/{names}_1.fq.gz",
-        second = "results/04_fastp/{names}_2.fq.gz",
-        html = "results/04_fastp/{names}_fastp.html",
-        json = "results/04_fastp/{names}_fastp.json"
+        first = "results/02_fastp/{names}_1.fastq.gz",
+        second = "results/02_fastp/{names}_2.fastq.gz",
+        html = "results/02_fastp/{names}_fastp.html",
+        json = "results/02_fastp/{names}_fastp.json"
     params:
         extra="-w 16"
     log:
         "logs/fastp_{names}.log"
-    conda:
-        "envs/fastp.yaml"
     shell:
         """
         fastp {params.extra} -i {input.first} -I {input.second} -o {output.first} -O {output.second} -h {output.html} -j {output.json} --detect_adapter_for_pe 2>> {log}
         """
+rule aftertrimming_fastqc: 
+    input:
+        "results/02_fastp/{names}_{con}.fastq.gz"
+    output:
+        result = directory("results/03_ATfastqc/{names}_{con}_fastqc/")
+    log:
+        "logs/fastqc_{names}_{con}.log"
+    params:
+        extra="-t 32"
+    shell:
+        """
+        fastqc {params.extra} {input} --extract -o results/03_ATfastqc/ 2>> {log}
+        """
+
+rule aftertrimming_multiqc:
+    input:
+        expand("results/03_ATfastqc/{names}_{con}_fastqc/", names=sample_names, con = CONDITIONS)
+    output:
+        "results/04_ATmultiqc/multiqc_report.html",
+        result = directory("results/04_ATmultiqc/")  
+    log:
+        "logs/multiqc.log"
+    shell:
+        """
+        multiqc results/03_ATfastqc/ -o {output.result} 2>> {log}
+        """
+
+rule BWA_indexing: 
+    input: 
+        "data/ref_data/hg38.fasta"
+    output: 
+        "data/ref_data/hg38.fasta.amb",
+        "data/ref_data/hg38.fasta.ann",
+        "data/ref_data/hg38.fasta.bwt",
+        "data/ref_data/hg38.fasta.pac",
+        "data/ref_data/hg38.fasta.sa"
+    log: 
+        "logs/bwa_index.log"
+    shell: 
+        """
+        bwa index {input} 2>> {log}
+        """
+
+rule BWA_alignment:
+    input: 
+        "data/ref_data/hg38.fasta.amb",
+        "data/ref_data/hg38.fasta.ann",
+        "data/ref_data/hg38.fasta.bwt",
+        "data/ref_data/hg38.fasta.pac",
+        "data/ref_data/hg38.fasta.sa",
+        first = "results/02_fastp/{names}_1.fastq.gz",
+        second = "results/02_fastp/{names}_2.fastq.gz"
+    output:
+        "results/04_bwa/alignment/{names}.sam"
+    log: 
+        "logs/bwa_{names}.log"
+    params:
+        extra="-t 16"
+    shell:
+     """
+     bwa mem {params.extra} data/ref_data/ {input.first} {input.second} > {output} 2>> {log}
+     """
