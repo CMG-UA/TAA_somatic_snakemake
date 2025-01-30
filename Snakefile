@@ -143,14 +143,34 @@ rule samtools:
     shell:
         """
         samtools sort {params.threads} {input} -o {output} 2>> {log}
-        samtools addreplacerg -r '@RG\tID:{wildcards.names}\tSM:{wildcards.names}_{wildcards.type}' -o {output} {input} 2>> {log}
         samtools index {params.threads} {output} 2>> {log}
-        samtools sort {params.threads} {output} 2>> {log}
         """ 
+rule AddReadGroups:
+    input:
+        "results/06_samtools/{names}_{type}.bam"
+    output:
+        first="results/06_samtools/{names}_{type}_rg.bam",
+        second="results/06_samtools/{names}_{type}_rg_sorted.bam"
+    log:
+        "logs/add_read_groups_{names}_{type}.log"
+    shell:
+        """
+        picard AddOrReplaceReadGroups \
+            I={input} \
+            O={output.first} \
+            RGID={wildcards.names}_{wildcards.type} \
+            RGLB=lib1 \
+            RGPL=illumina \
+            RGPU=unit1 \
+            RGSM={wildcards.names}_{wildcards.type} \
+            2>> {log}
+
+            samtools sort -o {output.second} {output.first} 2>> {log}
+        """
 
 rule Picard: 
     input:
-        "results/06_samtools/{names}_{type}.bam"
+        "results/06_samtools/{names}_{type}_rg_sorted.bam"
     output:
         bam="results/07_picard/marked_duplicates_{names}_{type}.bam",
         txt="results/07_picard/marked_dup_metrics_{names}_{type}.txt"
@@ -163,7 +183,6 @@ rule Picard:
         """
         picard MarkDuplicates -I {input} -O {output.bam} -M {output.txt} {params.regex} {params.resources} 2>> {log}
         """
-
 rule mpileup:
     input: 
         "results/07_picard/marked_duplicates_{names}_{type}.bam"
@@ -190,7 +209,7 @@ rule Varscan:
     #params: 
     shell: 
         """
-        varscan somatic {input.blood} {input.disease} --output-snp {output.snp} --output-indel {output.indel} 2>> {log}
+        varscan somatic {input.blood} {input.disease} --output-snp {output.snp} --output-indel {output.indel}
         """
 
 rule fasta_dict: 
@@ -204,11 +223,25 @@ rule fasta_dict:
         """
         gatk CreateSequenceDictionary -R {input.ref} 2>> {log}
         """
+        
+rule index:
+    input:
+        "results/07_picard/marked_duplicates_{names}_{type}.bam"
+    output: 
+        "results/07_picard/marked_duplicates_{names}_{type}.bam.bai"
+    log: 
+        "logs/index_dup_{names}_{type}.log"
+    params: 
+        "-@ 32"
+    shell: 
+        "samtools index {params} {input}"
 
 rule Mutect: 
     input: 
         disease="results/07_picard/marked_duplicates_{names}_tumor.bam",
         blood="results/07_picard/marked_duplicates_{names}_blood.bam",
+        index_d="results/07_picard/marked_duplicates_{names}_tumor.bam.bai",
+        index_b="results/07_picard/marked_duplicates_{names}_blood.bam.bai",
         ref_dict="data/ref_data/hg38.dict"
     output: 
         somatic="results/09_variant_calling/mutect/{names}_somatic.vcf.gz"
