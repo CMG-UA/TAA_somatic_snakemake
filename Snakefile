@@ -21,9 +21,10 @@ rule all:
     input:"results/01_multiqc/multiqc_report.html",
         "results/04_ATmultiqc/multiqc_report.html",
         expand("results/09_variant_calling/mutect/{names}_somatic.vcf.gz", names=sample_names),
-        expand("results/09_variant_calling/varscan/{names}.vcf", names=sample_names),
-        expand("results/09_variant_calling/somaticsniper/{names}.vcf", names=sample_names),
-        expand("results/09_variant_calling/MuSE/{names}.vcf", names=sample_names)
+        expand("results/09_variant_calling/varscan/{names}.vcf.gz", names=sample_names),
+        expand("results/09_variant_calling/somaticsniper/{names}.vcf.gz", names=sample_names),
+        expand("results/09_variant_calling/{names}_consensus.vcf", names=sample_names)
+        #expand("results/09_variant_calling/MuSE/{names}.vcf", names=sample_names)
         
 
 rule fastqc: 
@@ -211,7 +212,7 @@ rule Varscan:
     #params: 
     shell: 
         """
-        varscan somatic {input.blood} {input.disease} --output-snp {output.snp} --output-indel {output.indel}
+        varscan somatic {input.blood} {input.disease} --output-snp {output.snp} --output-indel {output.indel} 2>> {log}
         """
 
 rule snp_to_vcf:
@@ -224,6 +225,7 @@ rule snp_to_vcf:
     shell:
         """
         python3 scripts/vs_format_converter.py {input.snp} >> {output} 2>> {log}
+        bgzip -k {output}
         """
 
 rule fasta_dict: 
@@ -248,7 +250,7 @@ rule index:
     params: 
         "-@ 32"
     shell: 
-        "samtools index {params} {input}"
+        "samtools index {params} {input} 2>> {log}"
 
 rule Mutect: 
     input: 
@@ -262,10 +264,12 @@ rule Mutect:
     log: 
         "logs/mutect_{names}.log"
     params: 
-        ref="-R data/ref_data/hg38.fasta"
+        ref="-R data/ref_data/hg38.fasta",
+        threads="--native-pair-hmm-threads 16"
     shell: 
         """
         gatk Mutect2 \
+        {params.threads} \
         {params.ref} \
         -I {input.disease}\
         -I {input.blood} \
@@ -287,54 +291,47 @@ rule Somaticsniper:
     shell:
         """
         bam-somaticsniper {params.format} {params.ref} {input.disease} {input.blood} {output} 2>> {log}
+        bgzip -k {output} 2>> {log}
         """
 
-rule Muse_call:
-    input: 
-        disease="results/07_picard/marked_duplicates_{names}_tumor.bam",
-        blood="results/07_picard/marked_duplicates_{names}_blood.bam"
-    output: 
-        "results/09_variant_calling/MuSE/{names}.MuSE.txt"
-    log: 
-        "logs/muse_call_{names}.log"
-    params:
-        ref="-f data/ref_data/hg38.fasta",
-        core=" -n 32"
-    shell: 
-        """
-        MuSE call {params.ref} -O results/09_variant_calling/MuSE/{wildcards.names} {params.core} {input.disease} {input.blood} 2>> {log}
-        """
-
-rule Muse_sump: 
+rule index_tbi:
     input:
-        "results/09_variant_calling/MuSE/{names}.MuSE.txt"
+        mutect="results/09_variant_calling/mutect/{names}_somatic.vcf.gz",
+        somaticsniper="results/09_variant_calling/somaticsniper/{names}.vcf.gz",
+        varscan="results/09_variant_calling/varscan/{names}.vcf.gz"
     output:
-        vcf="results/09_variant_calling/MuSE/{names}.vcf"
+        mutect="results/09_variant_calling/mutect/{names}_somatic.vcf.gz.tbi",
+        somaticsniper="results/09_variant_calling/somaticsniper/{names}.vcf.gz.tbi",
+        varscan="results/09_variant_calling/varscan/{names}.vcf.gz.tbi"
     log: 
-        "logs/muse_sump_{names}.log"
+        "logs/index_tbi_{names}.log"
     params:
-        seq="-E",
-        core="-n 2"
+        threads="-@ 32",
+        filetype="-p vcf"
     shell:
         """
-        MuSE sump -I {input} -O {output.vcf} {params.seq} {params.core} 2>> {log}
+        tabix {params.threads} {params.filetype} {input.mutect} &
+        tabix {params.threads} {params.filetype} {input.somaticsniper} &
+        tabix {params.threads} {params.filetype} {input.varscan} 2>> {log}
         """
 
-rule Vardict:
-    input: 
-        disease="results/07_picard/marked_duplicates_{names}_tumor.bam",
-        blood="results/07_picard/marked_duplicates_{names}_blood.bam"
-    output: 
-        "results/09_variant_calling/vardict/{names}.vcf"
+rule consensus_bcftools:
+    input:
+        mutect="results/09_variant_calling/mutect/{names}_somatic.vcf.gz",
+        somaticsniper="results/09_variant_calling/somaticsniper/{names}.vcf.gz",
+        varscan="results/09_variant_calling/varscan/{names}.vcf.gz",
+        mutect_tbi="results/09_variant_calling/mutect/{names}_somatic.vcf.gz.tbi",
+        somaticsniper_tbi="results/09_variant_calling/somaticsniper/{names}.vcf.gz.tbi",
+        varscan_tbi="results/09_variant_calling/varscan/{names}.vcf.gz.tbi"
+    output:
+        "results/09_variant_calling/{names}_consensus.vcf"
     log: 
-        "logs/vardict_{names}.log"
+        "logs/consensus_bcf_{names}.log"
     params: 
-        ref="-G data/ref_data/hg38.fasta"
+        appear_number= "-n+2", #the -n+2 is for variants in at least 2 out of 3
+        metadata= "-w1", #without metadata, only variants records
+        threads="--threads 32"
     shell: 
         """
-        AF_THR="0.01" # minimum allele frequency
-        vardict {params.ref} -f $AF_THR -N {wildcards.names} -b "{input.disease}|{input.blood}" | testsomatic.R | var2vcf_paired.pl -N "{wildcards.names}_tumor|{wildcards.names}_blood" -f $AF_THR
+        bcftools isec {params.threads} {params.appear_number} {params.metadata} -o {output} {input.mutect} {input.somaticsniper} {input.varscan} 2>> {log}
         """
-
-
-
