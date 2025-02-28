@@ -282,16 +282,18 @@ rule Somaticsniper:
         disease="results/07_picard/marked_duplicates_{names}_tumor.bam",
         blood="results/07_picard/marked_duplicates_{names}_blood.bam"
     output:
-        "results/09_variant_calling/somaticsniper/{names}.vcf"
+        first="results/09_variant_calling/somaticsniper/{names}.vcf",
+        second="results/09_variant_calling/somaticsniper/{names}.vcf.gz"
     log:
         "logs/somaticsniper_{names}.log"
     params: 
         ref="-f data/ref_data/hg38.fasta",
-        format="-F vcf"
+        format="-F vcf",
+        quality="-Q 40 -G -L" #recommended quality parameters for mapping with bwa
     shell:
         """
-        bam-somaticsniper {params.format} {params.ref} {input.disease} {input.blood} {output} 2>> {log}
-        bgzip -k {output} 2>> {log}
+        bam-somaticsniper {params.quality} {params.format} {params.ref} {input.disease} {input.blood} {output.first} 2>> {log}
+        bgzip -k {output.first} 2>> {log}
         """
 
 rule index_tbi:
