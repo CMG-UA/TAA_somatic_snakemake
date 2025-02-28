@@ -219,7 +219,7 @@ rule snp_to_vcf:
     input:
         snp="results/09_variant_calling/varscan/{names}.snp"
     output:
-        fist="results/09_variant_calling/varscan/{names}.vcf",
+        first="results/09_variant_calling/varscan/{names}.vcf",
         second="results/09_variant_calling/varscan/{names}.vcf.gz"
     log:
         "logs/convert_snp_vcf_{names}.log"
