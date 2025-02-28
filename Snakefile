@@ -20,9 +20,9 @@ for i in range(len(sample_list)):
 rule all:
     input:"results/01_multiqc/multiqc_report.html",
         "results/04_ATmultiqc/multiqc_report.html",
-        expand("results/09_variant_calling/mutect/{names}_somatic.vcf.gz", names=sample_names),
-        expand("results/09_variant_calling/varscan/{names}.vcf.gz", names=sample_names),
-        expand("results/09_variant_calling/somaticsniper/{names}.vcf.gz", names=sample_names),
+       #expand("results/09_variant_calling/mutect/{names}_somatic.vcf.gz", names=sample_names),
+        #expand("results/09_variant_calling/varscan/{names}.vcf.gz", names=sample_names),
+        #expand("results/09_variant_calling/somaticsniper/{names}.vcf.gz", names=sample_names),
         expand("results/09_variant_calling/{names}_consensus.vcf", names=sample_names)
         #expand("results/09_variant_calling/MuSE/{names}.vcf", names=sample_names)
         
@@ -219,13 +219,14 @@ rule snp_to_vcf:
     input:
         snp="results/09_variant_calling/varscan/{names}.snp"
     output:
-        "results/09_variant_calling/varscan/{names}.vcf"
+        fist="results/09_variant_calling/varscan/{names}.vcf",
+        second="results/09_variant_calling/varscan/{names}.vcf.gz"
     log:
         "logs/convert_snp_vcf_{names}.log"
     shell:
         """
-        python3 scripts/vs_format_converter.py {input.snp} >> {output} 2>> {log}
-        bgzip -k {output}
+        python3 scripts/vs_format_converter.py {input.snp} >> {output.first} 2>> {log}
+        bgzip -k {output.first}
         """
 
 rule fasta_dict: 
@@ -260,7 +261,8 @@ rule Mutect:
         index_b="results/07_picard/marked_duplicates_{names}_blood.bam.bai",
         ref_dict="data/ref_data/hg38.dict"
     output: 
-        somatic="results/09_variant_calling/mutect/{names}_somatic.vcf.gz"
+        first="results/09_variant_calling/mutect/{names}_somatic.vcf",
+        second="results/09_variant_calling/mutect/{names}_somatic.vcf.gz"
     log: 
         "logs/mutect_{names}.log"
     params: 
@@ -274,7 +276,7 @@ rule Mutect:
         -I {input.disease}\
         -I {input.blood} \
         -normal {wildcards.names}_blood \
-        -O {output.somatic} 2>> {log}
+        -O {output.first} 2>> {log}
         """
 
 rule Somaticsniper:
