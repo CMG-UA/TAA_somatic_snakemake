@@ -261,8 +261,7 @@ rule Mutect:
         index_b="results/07_picard/marked_duplicates_{names}_blood.bam.bai",
         ref_dict="data/ref_data/hg38.dict"
     output: 
-        first="results/09_variant_calling/mutect/{names}_somatic.vcf",
-        second="results/09_variant_calling/mutect/{names}_somatic.vcf.gz"
+       "results/09_variant_calling/mutect/{names}_somatic.vcf.gz"
     log: 
         "logs/mutect_{names}.log"
     params: 
@@ -276,7 +275,7 @@ rule Mutect:
         -I {input.disease}\
         -I {input.blood} \
         -normal {wildcards.names}_blood \
-        -O {output.first} 2>> {log}
+        -O {output} 2>> {log}
         """
 
 rule Somaticsniper:
