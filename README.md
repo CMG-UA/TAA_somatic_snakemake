@@ -58,3 +58,4 @@ If you are running without slurm (which is not advisable) the following command 
 ````
 $ snakemake -p --cores $(nproc) --verbose --rerun-incomplete --latency-wait 36000
 ````
+[A DAG of the TAA somatic pipeline in snakemake](dag.png "DAG of the TAA somatic pipeline")
