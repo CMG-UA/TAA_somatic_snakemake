@@ -1,0 +1,3 @@
+[submodule "biomina_plugin"]
+	path = biomina_plugin
+	url = git@github.com:CMG-UA/biomina_plugin.git
