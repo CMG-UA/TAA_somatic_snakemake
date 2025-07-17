@@ -18,97 +18,109 @@ for i in range(len(sample_list)):
         #print(sample_names)
 
 rule all:
-    input:"results/01_multiqc/multiqc_report.html",
-        "results/04_ATmultiqc/multiqc_report.html",
+    input:"/home/mhannaert/TAA_somatic_snakemake/results/01_multiqc/multiqc_report.html",
+        "/home/mhannaert/TAA_somatic_snakemake/results/04_ATmultiqc/multiqc_report.html",
        #expand("results/09_variant_calling/mutect/{names}_somatic.vcf.gz", names=sample_names),
         #expand("results/09_variant_calling/varscan/{names}.vcf.gz", names=sample_names),
         #expand("results/09_variant_calling/somaticsniper/{names}.vcf.gz", names=sample_names),
-        expand("results/09_variant_calling/{names}_consensus.vcf", names=sample_names)
+        expand("/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/{names}_consensus.vcf", names=sample_names)
         #expand("results/09_variant_calling/MuSE/{names}.vcf", names=sample_names)
         
 
 rule fastqc: 
     input:
-        "data/{names}_{type}_{con}.fastq.gz"
+        "/home/mhannaert/TAA_somatic_snakemake/data/{names}_{type}_{con}.fastq.gz"
     output:
-        result = directory("results/00_fastqc/{names}_{type}_{con}_fastqc/")
+        result = directory("/home/mhannaert/TAA_somatic_snakemake/results/00_fastqc/{names}_{type}_{con}_fastqc/")
     log:
-        "logs/fastqc_{names}_{type}_{con}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/fastqc_{names}_{type}_{con}.log"
+    conda:
+        "env.yml"
     params:
         extra="-t 64"
     shell:
         """
-        fastqc {params.extra} {input} --extract -o results/00_fastqc/ 2>> {log}
+        fastqc {params.extra} {input} --extract -o /home/mhannaert/TAA_somatic_snakemake/results/00_fastqc/ 2>> {log}
         """
 
 rule multiqc:
     input:
-        expand("results/00_fastqc/{names}_{type}_{con}_fastqc/", names=sample_names, type=TYPE, con = CONDITIONS)
+        expand("/home/mhannaert/TAA_somatic_snakemake/results/00_fastqc/{names}_{type}_{con}_fastqc/", names=sample_names, type=TYPE, con = CONDITIONS)
     output:
-        "results/01_multiqc/multiqc_report.html",
-        result = directory("results/01_multiqc/")  
+        "/home/mhannaert/TAA_somatic_snakemake/results/01_multiqc/multiqc_report.html",
+        result = directory("/home/mhannaert/TAA_somatic_snakemake/results/01_multiqc/")  
     log:
-        "logs/multiqc.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/multiqc.log"
+    conda:
+        "env.yml"
     shell:
         """
-        multiqc results/00_fastqc/ -o {output.result} 2>> {log}
+        multiqc /home/mhannaert/TAA_somatic_snakemake/results/00_fastqc/ -o {output.result} 2>> {log}
         """
 
 rule Fastp:
     input:
-        first = "data/{names}_{type}_1.fastq.gz",
-        second = "data/{names}_{type}_2.fastq.gz"
+        first = "/home/mhannaert/TAA_somatic_snakemake/data/{names}_{type}_1.fastq.gz",
+        second = "/home/mhannaert/TAA_somatic_snakemake/data/{names}_{type}_2.fastq.gz"
     output:
-        first = "results/02_fastp/{names}_{type}_1.fastq.gz",
-        second = "results/02_fastp/{names}_{type}_2.fastq.gz",
-        html = "results/02_fastp/{names}_{type}_fastp.html",
-        json = "results/02_fastp/{names}_{type}_fastp.json"
+        first = "/home/mhannaert/TAA_somatic_snakemake/results/02_fastp/{names}_{type}_1.fastq.gz",
+        second = "/home/mhannaert/TAA_somatic_snakemake/results/02_fastp/{names}_{type}_2.fastq.gz",
+        html = "/home/mhannaert/TAA_somatic_snakemake/results/02_fastp/{names}_{type}_fastp.html",
+        json = "/home/mhannaert/TAA_somatic_snakemake/results/02_fastp/{names}_{type}_fastp.json"
     params:
         extra="-w 16"
     log:
-        "logs/fastp_{names}_{type}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/fastp_{names}_{type}.log"
+    conda:
+        "env.yml"
     shell:
         """
         fastp {params.extra} -i {input.first} -I {input.second} -o {output.first} -O {output.second} -h {output.html} -j {output.json} --detect_adapter_for_pe 2>> {log}
         """
 rule aftertrimming_fastqc: 
     input:
-        "results/02_fastp/{names}_{type}_{con}.fastq.gz"
+        "/home/mhannaert/TAA_somatic_snakemake/results/02_fastp/{names}_{type}_{con}.fastq.gz"
     output:
-        result = directory("results/03_ATfastqc/{names}_{type}_{con}_fastqc/")
+        result = directory("/home/mhannaert/TAA_somatic_snakemake/results/03_ATfastqc/{names}_{type}_{con}_fastqc/")
     log:
-        "logs/ATfastqc_{names}_{type}_{con}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/ATfastqc_{names}_{type}_{con}.log"
+    conda:
+        "env.yml"
     params:
         extra="-t 64"
     shell:
         """
-        fastqc {params.extra} {input} --extract -o results/03_ATfastqc/ 2>> {log}
+        fastqc {params.extra} {input} --extract -o /home/mhannaert/TAA_somatic_snakemake/results/03_ATfastqc/ 2>> {log}
         """
 
 rule aftertrimming_multiqc:
     input:
-        expand("results/03_ATfastqc/{names}_{type}_{con}_fastqc/", names=sample_names, type=TYPE, con = CONDITIONS)
+        expand("/home/mhannaert/TAA_somatic_snakemake/results/03_ATfastqc/{names}_{type}_{con}_fastqc/", names=sample_names, type=TYPE, con = CONDITIONS)
     output:
-        "results/04_ATmultiqc/multiqc_report.html",
-        result = directory("results/04_ATmultiqc/")  
+        "/home/mhannaert/TAA_somatic_snakemake/results/04_ATmultiqc/multiqc_report.html",
+        result = directory("/home/mhannaert/TAA_somatic_snakemake/results/04_ATmultiqc/")  
     log:
-        "logs/ATmultiqc.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/ATmultiqc.log"
+    conda:
+        "env.yml"
     shell:
         """
-        multiqc results/03_ATfastqc/ -o {output.result} 2>> {log}
+        multiqc /home/mhannaert/TAA_somatic_snakemake/results/03_ATfastqc/ -o {output.result} 2>> {log}
         """
 
 rule BWA_indexing: 
     input: 
-        "data/ref_data/hg38.fasta"
+        "/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta"
     output: 
-        "data/ref_data/hg38.fasta.amb",
-        "data/ref_data/hg38.fasta.ann",
-        "data/ref_data/hg38.fasta.bwt",
-        "data/ref_data/hg38.fasta.pac",
-        "data/ref_data/hg38.fasta.sa"
+        "/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta.amb",
+        "/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta.ann",
+        "/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta.bwt",
+        "/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta.pac",
+        "/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta.sa"
     log: 
-        "logs/bwa_index.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/bwa_index.log"
+    conda:
+        "env.yml"
     shell: 
         """
         bwa index {input} 2>> {log}
@@ -116,31 +128,35 @@ rule BWA_indexing:
 
 rule BWA_alignment:
     input: 
-        "data/ref_data/hg38.fasta.amb",
-        "data/ref_data/hg38.fasta.ann",
-        "data/ref_data/hg38.fasta.bwt",
-        "data/ref_data/hg38.fasta.pac",
-        "data/ref_data/hg38.fasta.sa",
-        first = "results/02_fastp/{names}_{type}_1.fastq.gz",
-        second = "results/02_fastp/{names}_{type}_2.fastq.gz"
+        "/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta.amb",
+        "/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta.ann",
+        "/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta.bwt",
+        "/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta.pac",
+        "/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta.sa",
+        first = "/home/mhannaert/TAA_somatic_snakemake/results/02_fastp/{names}_{type}_1.fastq.gz",
+        second = "/home/mhannaert/TAA_somatic_snakemake/results/02_fastp/{names}_{type}_2.fastq.gz"
     output:
-        "results/05_bwa/{names}_{type}.sam"
+        "/home/mhannaert/TAA_somatic_snakemake/results/05_bwa/{names}_{type}.sam"
     log: 
-        "logs/bwa_{names}_{type}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/bwa_{names}_{type}.log"
+    conda:
+        "env.yml"
     params:
         extra="-t 64"
     shell:
      """
-     bwa mem {params.extra} data/ref_data/hg38.fasta {input.first} {input.second} > {output} 2>> {log}
+     bwa mem {params.extra} /home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta {input.first} {input.second} > {output} 2>> {log}
      """
 
 rule samtools: 
     input:
-        "results/05_bwa/{names}_{type}.sam"
+        "/home/mhannaert/TAA_somatic_snakemake/results/05_bwa/{names}_{type}.sam"
     output: 
-        "results/06_samtools/{names}_{type}.bam"
+        "/home/mhannaert/TAA_somatic_snakemake/results/06_samtools/{names}_{type}.bam"
     log:
-        "logs/samtools_{names}_{type}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/samtools_{names}_{type}.log"
+    conda:
+        "env.yml"
     params:
         threads="-@ 64"
     shell:
@@ -150,12 +166,14 @@ rule samtools:
         """ 
 rule AddReadGroups:
     input:
-        "results/06_samtools/{names}_{type}.bam"
+        "/home/mhannaert/TAA_somatic_snakemake/results/06_samtools/{names}_{type}.bam"
     output:
-        first="results/06_samtools/{names}_{type}_rg.bam",
-        second="results/06_samtools/{names}_{type}_rg_sorted.bam"
+        first="/home/mhannaert/TAA_somatic_snakemake/results/06_samtools/{names}_{type}_rg.bam",
+        second="/home/mhannaert/TAA_somatic_snakemake/results/06_samtools/{names}_{type}_rg_sorted.bam"
     log:
-        "logs/add_read_groups_{names}_{type}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/add_read_groups_{names}_{type}.log"
+    conda:
+        "env.yml"
     shell:
         """
         picard AddOrReplaceReadGroups \
@@ -173,12 +191,14 @@ rule AddReadGroups:
 
 rule Picard: 
     input:
-        "results/06_samtools/{names}_{type}_rg_sorted.bam"
+        "/home/mhannaert/TAA_somatic_snakemake/results/06_samtools/{names}_{type}_rg_sorted.bam"
     output:
-        bam="results/07_picard/marked_duplicates_{names}_{type}.bam",
-        txt="results/07_picard/marked_dup_metrics_{names}_{type}.txt"
+        bam="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_{type}.bam",
+        txt="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_dup_metrics_{names}_{type}.txt"
     log: 
-        "logs/picard_{names}_{type}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/picard_{names}_{type}.log"
+    conda:
+        "env.yml"
     params:
         regex="--READ_NAME_REGEX null",
         resources="--MAX_RECORDS_IN_RAM 2000000 --COMPRESSION_LEVEL 5"
@@ -188,13 +208,15 @@ rule Picard:
         """
 rule mpileup:
     input: 
-        "results/07_picard/marked_duplicates_{names}_{type}.bam"
+        "/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_{type}.bam"
     output:
-        "results/08_mpileup/marked_duplicates_{names}_{type}.pileup"
+        "/home/mhannaert/TAA_somatic_snakemake/results/08_mpileup/marked_duplicates_{names}_{type}.pileup"
     log: 
-        "logs/mpileup_{names}_{type}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/mpileup_{names}_{type}.log"
+    conda:
+        "env.yml"
     params: 
-        ref="-f data/ref_data/hg38.fasta"
+        ref="-f /home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta"
     shell: 
         """
         samtools mpileup {params.ref} {input} > {output} 2>> {log}
@@ -202,13 +224,15 @@ rule mpileup:
 
 rule Varscan: 
     input: 
-        disease="results/08_mpileup/marked_duplicates_{names}_tumor.pileup",
-        blood="results/08_mpileup/marked_duplicates_{names}_blood.pileup"
+        disease="/home/mhannaert/TAA_somatic_snakemake/results/08_mpileup/marked_duplicates_{names}_tumor.pileup",
+        blood="/home/mhannaert/TAA_somatic_snakemake/results/08_mpileup/marked_duplicates_{names}_blood.pileup"
     output: 
-        snp="results/09_variant_calling/varscan/{names}.snp",
-        indel="results/09_variant_calling/varscan/{names}.indel"
+        snp="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.snp",
+        indel="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.indel"
     log: 
-        "logs/varscan_{names}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/varscan_{names}.log"
+    conda:
+        "env.yml"
     #params: 
     shell: 
         """
@@ -217,25 +241,29 @@ rule Varscan:
 
 rule snp_to_vcf:
     input:
-        snp="results/09_variant_calling/varscan/{names}.snp"
+        snp="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.snp"
     output:
-        first="results/09_variant_calling/varscan/{names}.vcf",
-        second="results/09_variant_calling/varscan/{names}.vcf.gz"
+        first="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf",
+        second="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz"
     log:
-        "logs/convert_snp_vcf_{names}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/convert_snp_vcf_{names}.log"
+    conda:
+        "env.yml"
     shell:
         """
-        python3 scripts/vs_format_converter.py {input.snp} >> {output.first} 2>> {log}
+        python3 /home/mhannaert/TAA_somatic_snakemake/scripts/vs_format_converter.py {input.snp} >> {output.first} 2>> {log}
         bgzip -k {output.first}
         """
 
 rule fasta_dict: 
     input:
-        ref="data/ref_data/hg38.fasta"
+        ref="/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta"
     output:
-        "data/ref_data/hg38.dict"
+        "/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.dict"
     log:
-        "logs/fasta_dict.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/fasta_dict.log"
+    conda:
+        "env.yml"
     shell:
         """
         gatk CreateSequenceDictionary -R {input.ref} 2>> {log}
@@ -243,11 +271,13 @@ rule fasta_dict:
         
 rule index:
     input:
-        "results/07_picard/marked_duplicates_{names}_{type}.bam"
+        "/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_{type}.bam"
     output: 
-        "results/07_picard/marked_duplicates_{names}_{type}.bam.bai"
+        "/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_{type}.bam.bai"
     log: 
-        "logs/index_dup_{names}_{type}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/index_dup_{names}_{type}.log"
+    conda:
+        "env.yml"
     params: 
         "-@ 32"
     shell: 
@@ -255,17 +285,19 @@ rule index:
 
 rule Mutect: 
     input: 
-        disease="results/07_picard/marked_duplicates_{names}_tumor.bam",
-        blood="results/07_picard/marked_duplicates_{names}_blood.bam",
-        index_d="results/07_picard/marked_duplicates_{names}_tumor.bam.bai",
-        index_b="results/07_picard/marked_duplicates_{names}_blood.bam.bai",
-        ref_dict="data/ref_data/hg38.dict"
+        disease="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_tumor.bam",
+        blood="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_blood.bam",
+        index_d="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_tumor.bam.bai",
+        index_b="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_blood.bam.bai",
+        ref_dict="/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.dict"
     output: 
-       "results/09_variant_calling/mutect/{names}_somatic.vcf.gz"
+       "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/{names}_somatic.vcf.gz"
     log: 
-        "logs/mutect_{names}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/mutect_{names}.log"
+    conda:
+        "env.yml"
     params: 
-        ref="-R data/ref_data/hg38.fasta",
+        ref="-R /home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta",
         threads="--native-pair-hmm-threads 16"
     shell: 
         """
@@ -280,15 +312,17 @@ rule Mutect:
 
 rule Somaticsniper:
     input:
-        disease="results/07_picard/marked_duplicates_{names}_tumor.bam",
-        blood="results/07_picard/marked_duplicates_{names}_blood.bam"
+        disease="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_tumor.bam",
+        blood="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_blood.bam"
     output:
-        first="results/09_variant_calling/somaticsniper/{names}.vcf",
-        second="results/09_variant_calling/somaticsniper/{names}.vcf.gz"
+        first="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{names}.vcf",
+        second="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{names}.vcf.gz"
     log:
-        "logs/somaticsniper_{names}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/somaticsniper_{names}.log"
+    conda:
+        "env.yml"
     params: 
-        ref="-f data/ref_data/hg38.fasta",
+        ref="-f /home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta",
         format="-F vcf",
         quality="-Q 40 -G -L" #recommended quality parameters for mapping with bwa
     shell:
@@ -299,15 +333,17 @@ rule Somaticsniper:
 
 rule index_tbi:
     input:
-        mutect="results/09_variant_calling/mutect/{names}_somatic.vcf.gz",
-        somaticsniper="results/09_variant_calling/somaticsniper/{names}.vcf.gz",
-        varscan="results/09_variant_calling/varscan/{names}.vcf.gz"
+        mutect="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/{names}_somatic.vcf.gz",
+        somaticsniper="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{names}.vcf.gz",
+        varscan="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz"
     output:
-        mutect="results/09_variant_calling/mutect/{names}_somatic.vcf.gz.tbi",
-        somaticsniper="results/09_variant_calling/somaticsniper/{names}.vcf.gz.tbi",
-        varscan="results/09_variant_calling/varscan/{names}.vcf.gz.tbi"
+        mutect="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/{names}_somatic.vcf.gz.tbi",
+        somaticsniper="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{names}.vcf.gz.tbi",
+        varscan="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz.tbi"
     log: 
-        "logs/index_tbi_{names}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/index_tbi_{names}.log"
+    conda:
+        "env.yml"
     params:
         threads="-@ 32",
         filetype="-p vcf"
@@ -320,16 +356,18 @@ rule index_tbi:
 
 rule consensus_bcftools:
     input:
-        mutect="results/09_variant_calling/mutect/{names}_somatic.vcf.gz",
-        somaticsniper="results/09_variant_calling/somaticsniper/{names}.vcf.gz",
-        varscan="results/09_variant_calling/varscan/{names}.vcf.gz",
-        mutect_tbi="results/09_variant_calling/mutect/{names}_somatic.vcf.gz.tbi",
-        somaticsniper_tbi="results/09_variant_calling/somaticsniper/{names}.vcf.gz.tbi",
-        varscan_tbi="results/09_variant_calling/varscan/{names}.vcf.gz.tbi"
+        mutect="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/{names}_somatic.vcf.gz",
+        somaticsniper="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{names}.vcf.gz",
+        varscan="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz",
+        mutect_tbi="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/{names}_somatic.vcf.gz.tbi",
+        somaticsniper_tbi="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{names}.vcf.gz.tbi",
+        varscan_tbi="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz.tbi"
     output:
-        "results/09_variant_calling/{names}_consensus.vcf"
+        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/{names}_consensus.vcf"
     log: 
-        "logs/consensus_bcf_{names}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/consensus_bcf_{names}.log"
+    conda:
+        "env.yml"
     params: 
         appear_number= "-n+2", #the -n+2 is for variants in at least 2 out of 3
         metadata= "-w1", #without metadata, only variants records
