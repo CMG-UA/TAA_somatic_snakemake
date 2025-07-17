@@ -6,7 +6,7 @@ TYPE = ["tumor", "blood"]
 # Define directories
 REFDIR = os.getcwd()
 #print(REFDIR)
-sample_dir = REFDIR+"/../../../TAA_somatic_snakemake/data/"
+sample_dir = REFDIR+"/data/"
 
 sample_names = []
 sample_list = os.listdir(sample_dir)
