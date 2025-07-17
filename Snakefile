@@ -4,9 +4,10 @@ CONDITIONS = ["1", "2"]
 TYPE = ["tumor", "blood"]
 
 # Define directories
-REFDIR = os.getcwd()
+#REFDIR = os.getcwd()
 #print(REFDIR)
-sample_dir = REFDIR+"/data/"
+#sample_dir = REFDIR+"/data/"
+sample_dir = "/home/mhannaert/TAA_somatic_snakemake/data/"
 
 sample_names = []
 sample_list = os.listdir(sample_dir)

@@ -6,6 +6,6 @@
 #SBATCH --output=Snakemake_TAA_somatic_%j.out
 #SBATCH --error=Snakemake_TAA_somatic_%j.err
 
-/opt/software/miniconda3/bin/snakemake --cluster "sbatch --mem=40G -t 800 --cpus-per-task=4 --output=log_sbatch/$SLURM_JOB_ID.%j.out --error=log_sbatch/$SLURM_JOB_ID.%j.err" -j16 --verbose --rerun-incomplete --latency-wait 36000
+/opt/software/miniconda3/bin/snakemake --snakefile /home/marie/TAA_somatic_snakemake/Snakefile --cluster "sbatch --mem=40G -t 800 --cpus-per-task=4 --output=log_sbatch/$SLURM_JOB_ID.%j.out --error=log_sbatch/$SLURM_JOB_ID.%j.err" -j16 --verbose --rerun-incomplete --latency-wait 36000
 
 # You can also use env var set by SLURM, such as $SLURM_JOB_ID, $SLURM_NODELIST, etc.
