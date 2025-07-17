@@ -35,8 +35,6 @@ rule fastqc:
         result = directory("/home/mhannaert/TAA_somatic_snakemake/results/00_fastqc/{names}_{type}_{con}_fastqc/")
     log:
         "/home/mhannaert/TAA_somatic_snakemake/logs/fastqc_{names}_{type}_{con}.log"
-    conda:
-        "env.yml"
     params:
         extra="-t 64"
     shell:
@@ -52,8 +50,6 @@ rule multiqc:
         result = directory("/home/mhannaert/TAA_somatic_snakemake/results/01_multiqc/")  
     log:
         "/home/mhannaert/TAA_somatic_snakemake/logs/multiqc.log"
-    conda:
-        "env.yml"
     shell:
         """
         multiqc /home/mhannaert/TAA_somatic_snakemake/results/00_fastqc/ -o {output.result} 2>> {log}
@@ -72,8 +68,6 @@ rule Fastp:
         extra="-w 16"
     log:
         "/home/mhannaert/TAA_somatic_snakemake/logs/fastp_{names}_{type}.log"
-    conda:
-        "env.yml"
     shell:
         """
         fastp {params.extra} -i {input.first} -I {input.second} -o {output.first} -O {output.second} -h {output.html} -j {output.json} --detect_adapter_for_pe 2>> {log}
@@ -85,8 +79,6 @@ rule aftertrimming_fastqc:
         result = directory("/home/mhannaert/TAA_somatic_snakemake/results/03_ATfastqc/{names}_{type}_{con}_fastqc/")
     log:
         "/home/mhannaert/TAA_somatic_snakemake/logs/ATfastqc_{names}_{type}_{con}.log"
-    conda:
-        "env.yml"
     params:
         extra="-t 64"
     shell:
@@ -102,8 +94,6 @@ rule aftertrimming_multiqc:
         result = directory("/home/mhannaert/TAA_somatic_snakemake/results/04_ATmultiqc/")  
     log:
         "/home/mhannaert/TAA_somatic_snakemake/logs/ATmultiqc.log"
-    conda:
-        "env.yml"
     shell:
         """
         multiqc /home/mhannaert/TAA_somatic_snakemake/results/03_ATfastqc/ -o {output.result} 2>> {log}
@@ -120,8 +110,6 @@ rule BWA_indexing:
         "/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta.sa"
     log: 
         "/home/mhannaert/TAA_somatic_snakemake/logs/bwa_index.log"
-    conda:
-        "env.yml"
     shell: 
         """
         bwa index {input} 2>> {log}
@@ -140,8 +128,6 @@ rule BWA_alignment:
         "/home/mhannaert/TAA_somatic_snakemake/results/05_bwa/{names}_{type}.sam"
     log: 
         "/home/mhannaert/TAA_somatic_snakemake/logs/bwa_{names}_{type}.log"
-    conda:
-        "env.yml"
     params:
         extra="-t 64"
     shell:
@@ -156,8 +142,6 @@ rule samtools:
         "/home/mhannaert/TAA_somatic_snakemake/results/06_samtools/{names}_{type}.bam"
     log:
         "/home/mhannaert/TAA_somatic_snakemake/logs/samtools_{names}_{type}.log"
-    conda:
-        "env.yml"
     params:
         threads="-@ 64"
     shell:
@@ -173,8 +157,6 @@ rule AddReadGroups:
         second="/home/mhannaert/TAA_somatic_snakemake/results/06_samtools/{names}_{type}_rg_sorted.bam"
     log:
         "/home/mhannaert/TAA_somatic_snakemake/logs/add_read_groups_{names}_{type}.log"
-    conda:
-        "env.yml"
     shell:
         """
         picard AddOrReplaceReadGroups \
@@ -198,8 +180,6 @@ rule Picard:
         txt="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_dup_metrics_{names}_{type}.txt"
     log: 
         "/home/mhannaert/TAA_somatic_snakemake/logs/picard_{names}_{type}.log"
-    conda:
-        "env.yml"
     params:
         regex="--READ_NAME_REGEX null",
         resources="--MAX_RECORDS_IN_RAM 2000000 --COMPRESSION_LEVEL 5"
@@ -214,8 +194,6 @@ rule mpileup:
         "/home/mhannaert/TAA_somatic_snakemake/results/08_mpileup/marked_duplicates_{names}_{type}.pileup"
     log: 
         "/home/mhannaert/TAA_somatic_snakemake/logs/mpileup_{names}_{type}.log"
-    conda:
-        "env.yml"
     params: 
         ref="-f /home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta"
     shell: 
@@ -232,8 +210,6 @@ rule Varscan:
         indel="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.indel"
     log: 
         "/home/mhannaert/TAA_somatic_snakemake/logs/varscan_{names}.log"
-    conda:
-        "env.yml"
     #params: 
     shell: 
         """
@@ -248,8 +224,6 @@ rule snp_to_vcf:
         second="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz"
     log:
         "/home/mhannaert/TAA_somatic_snakemake/logs/convert_snp_vcf_{names}.log"
-    conda:
-        "env.yml"
     shell:
         """
         python3 /home/mhannaert/TAA_somatic_snakemake/scripts/vs_format_converter.py {input.snp} >> {output.first} 2>> {log}
@@ -263,8 +237,6 @@ rule fasta_dict:
         "/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.dict"
     log:
         "/home/mhannaert/TAA_somatic_snakemake/logs/fasta_dict.log"
-    conda:
-        "env.yml"
     shell:
         """
         gatk CreateSequenceDictionary -R {input.ref} 2>> {log}
@@ -277,8 +249,6 @@ rule index:
         "/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_{type}.bam.bai"
     log: 
         "/home/mhannaert/TAA_somatic_snakemake/logs/index_dup_{names}_{type}.log"
-    conda:
-        "env.yml"
     params: 
         "-@ 32"
     shell: 
@@ -295,8 +265,6 @@ rule Mutect:
        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/{names}_somatic.vcf.gz"
     log: 
         "/home/mhannaert/TAA_somatic_snakemake/logs/mutect_{names}.log"
-    conda:
-        "env.yml"
     params: 
         ref="-R /home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta",
         threads="--native-pair-hmm-threads 16"
@@ -320,8 +288,6 @@ rule Somaticsniper:
         second="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{names}.vcf.gz"
     log:
         "/home/mhannaert/TAA_somatic_snakemake/logs/somaticsniper_{names}.log"
-    conda:
-        "env.yml"
     params: 
         ref="-f /home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta",
         format="-F vcf",
@@ -343,8 +309,6 @@ rule index_tbi:
         varscan="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz.tbi"
     log: 
         "/home/mhannaert/TAA_somatic_snakemake/logs/index_tbi_{names}.log"
-    conda:
-        "env.yml"
     params:
         threads="-@ 32",
         filetype="-p vcf"
@@ -367,8 +331,6 @@ rule consensus_bcftools:
         "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/{names}_consensus.vcf"
     log: 
         "/home/mhannaert/TAA_somatic_snakemake/logs/consensus_bcf_{names}.log"
-    conda:
-        "env.yml"
     params: 
         appear_number= "-n+2", #the -n+2 is for variants in at least 2 out of 3
         metadata= "-w1", #without metadata, only variants records
