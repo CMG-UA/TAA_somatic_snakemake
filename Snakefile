@@ -261,9 +261,9 @@ rule snp_to_vcf:
         """
 rule Getting_germline_variants: 
     input:
-        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz"
+        vcf="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz"
     output:
-        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}_germline.vcf"
+        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}_germline.vcf.gz"
     log: 
         "/home/mhannaert/TAA_somatic_snakemake/logs/getting_germline_variants_{names}.log"
     shell:
