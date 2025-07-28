@@ -227,7 +227,8 @@ rule selecting_hema:
         blood_to_disease="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_HEMA_{names}_tumor.bam",
         disease_to_blood="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_HEMA_{names}_blood.bam"
     log:
-        "/home/mhannaert/TAA_somatic_snakemake/logs/selecting_hema_{names}_{type}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/selecting_hema_{names}_blood.log",
+        "/home/mhannaert/TAA_somatic_snakemake/logs/selecting_hema_{names}_tumor.log
     shell:
         """
         bedtools intersect -abam {input.bambloodfile} -b {input.bed} -v > {output.blood_to_disease} 2>> {log}
