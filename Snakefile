@@ -52,6 +52,7 @@ rule all:
        #expand("results/09_variant_calling/mutect/{names}_somatic.vcf.gz", names=sample_names),
         #expand("results/09_variant_calling/varscan/{names}.vcf.gz", names=sample_names),
         #expand("results/09_variant_calling/somaticsniper/{names}.vcf.gz", names=sample_names),
+        expand("/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}_germline.vcf.gz", names=sample_names),
         expand("/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/{names}_consensus.vcf", names=sample_names)
         #expand("results/09_variant_calling/MuSE/{names}.vcf", names=sample_names)
         
