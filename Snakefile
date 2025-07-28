@@ -261,14 +261,14 @@ rule snp_to_vcf:
         """
 rule Getting_germline_variants: 
     input:
-        vcf="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz"
+        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz"
     output:
         "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}_germline.vcf"
     log: 
         "/home/mhannaert/TAA_somatic_snakemake/logs/getting_germline_variants_{names}.log"
     shell:
         """
-        bcftools view -i 'SS="1"' {input.vcf} -Oz -o {output} 2>> {log}
+        bcftools view -i 'SS="1"' {input} -Oz -o {output} 2>> {log}
         """
 #rule selecting_germline_variants:
     #input:
