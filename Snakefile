@@ -268,8 +268,7 @@ rule Getting_germline_variants:
         "/home/mhannaert/TAA_somatic_snakemake/logs/getting_germline_variants_{names}.log"
     shell:
         """
-        bcftools view -i 'SS=1' -k {input} -Oz -o {output} 2>> {log}
-        bcftools view {input} | cut -f8 | grep SS=1 >> {output} 2>> {log}
+        bcftools view -i 'SS="1"' -k {input} -Oz -o {output} 2>> {log}
         """
 #rule selecting_germline_variants:
     #input:
