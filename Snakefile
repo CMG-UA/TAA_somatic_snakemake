@@ -217,6 +217,23 @@ rule Picard:
         """
         picard MarkDuplicates -I {input} -O {output.bam} -M {output.txt} {params.regex} {params.resources} 2>> {log}
         """
+
+rule selecting_hema:
+    input:
+        bambloodfile="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_blood.bam",
+        bamdiseasefile="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_tumor.bam",
+        bed="/home/mhannaert/TAA_somatic_snakemake/data/Clonal_hematopoesis_genes.bed"
+    output:
+        blood_to_disease="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_HEMA_{names}_tumor.bam",
+        disease_to_blood="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_HEMA_{names}_blood.bam"
+    log:
+        "/home/mhannaert/TAA_somatic_snakemake/logs/selecting_hema_{names}_{type}.log"
+    shell:
+        """
+        bedtools intersect -abam {input.bambloodfile} -b {input.bed} -v > {output.blood_to_disease} 2>> {log}
+        bedtools intersect -abam {input.bamdiseasefile} -b {input.bed} -v > {output.disease_to_blood} 2>> {log}
+        """
+
 rule mpileup:
     input: 
         "/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_{type}.bam"
