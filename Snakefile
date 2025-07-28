@@ -270,15 +270,18 @@ rule Getting_germline_variants:
         """
         bcftools view -i 'SS="1"' {input} -Oz -o {output} 2>> {log}
         """
-#rule selecting_germline_variants:
-    #input:
-    #   "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}_germline.vcf.gz"
-    #output:
-    #    "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}_selected_germline.vcf.gz"
-    #log:
-    #   
-    #shell:
-
+rule selecting_germline_variants:
+    input:
+        germ_file="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}_germline.vcf.gz",
+        bed="/home/mhannaert/TAA_somatic_snakemake/data/known_genes.bed"
+    output:
+        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}_selected_germline.vcf"
+    log:
+        "/home/mhannaert/TAA_somatic_snakemake/logs/selecting_germline_variants_{names}.log"
+    shell:
+        """
+        zcat {input.germ_file} | bedtools intersect -a - -b {input.bed} -header > {output} 2>> {log}
+        """
 rule fasta_dict: 
     input:
         ref="/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta"
