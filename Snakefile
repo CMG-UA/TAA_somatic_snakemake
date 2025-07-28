@@ -52,6 +52,8 @@ rule all:
        #expand("results/09_variant_calling/mutect/{names}_somatic.vcf.gz", names=sample_names),
         #expand("results/09_variant_calling/varscan/{names}.vcf.gz", names=sample_names),
         #expand("results/09_variant_calling/somaticsniper/{names}.vcf.gz", names=sample_names),
+        expand("/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_HEMA_{names}_tumor.bam", names=sample_names),
+        expand("/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_HEMA_{names}_blood.bam", names=sample_names),
         expand("/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/germline/{names}_selected_germline.vcf", names=sample_names),
         expand("/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/{names}_consensus.vcf", names=sample_names)
         #expand("results/09_variant_calling/MuSE/{names}.vcf", names=sample_names)
