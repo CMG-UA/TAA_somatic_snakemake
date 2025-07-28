@@ -19,7 +19,7 @@ for i in range(len(sample_list)):
         #print(sample_names)
 
 known_genes_list = []
-with open("/home/marie/TAA_somatic_snakemake/data/known_genes.txt", "r") as known_genes:
+with open("/home/mhannaert/TAA_somatic_snakemake/data/known_genes.txt", "r") as known_genes:
     reader = csv.reader(known_genes)
     next(reader)  # sla de header over: "symbol,chromosoom,start,stop"
     for row in reader:
@@ -33,7 +33,7 @@ with open("/home/marie/TAA_somatic_snakemake/data/known_genes.txt", "r") as know
 
 
 hematopoëse_genes_list = []
-with open("/home/marie/TAA_somatic_snakemake/data/known_genes.txt", "r") as hema_genes:
+with open("/home/mhannaert/TAA_somatic_snakemake/data/known_genes.txt", "r") as hema_genes:
     reader = csv.reader(hema_genes)
     next(reader)  # sla header over
     for row in reader:
