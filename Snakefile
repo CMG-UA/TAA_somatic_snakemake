@@ -52,7 +52,7 @@ rule all:
        #expand("results/09_variant_calling/mutect/{names}_somatic.vcf.gz", names=sample_names),
         #expand("results/09_variant_calling/varscan/{names}.vcf.gz", names=sample_names),
         #expand("results/09_variant_calling/somaticsniper/{names}.vcf.gz", names=sample_names),
-        expand("/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}_selected_germline.vcf", names=sample_names),
+        expand("/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/germline/{names}_selected_germline.vcf", names=sample_names),
         expand("/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/{names}_consensus.vcf", names=sample_names)
         #expand("results/09_variant_calling/MuSE/{names}.vcf", names=sample_names)
         
@@ -263,7 +263,7 @@ rule Getting_germline_variants:
     input:
         vcf="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz"
     output:
-        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}_germline.vcf.gz"
+        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/germline/{names}_germline.vcf.gz"
     log: 
         "/home/mhannaert/TAA_somatic_snakemake/logs/getting_germline_variants_{names}.log"
     shell:
@@ -272,10 +272,10 @@ rule Getting_germline_variants:
         """
 rule selecting_germline_variants:
     input:
-        germ_file="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}_germline.vcf.gz",
+        germ_file="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/germline/{names}_germline.vcf.gz",
         bed="/home/mhannaert/TAA_somatic_snakemake/data/known_genes.bed"
     output:
-        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}_selected_germline.vcf"
+        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/germline/{names}_selected_germline.vcf"
     log:
         "/home/mhannaert/TAA_somatic_snakemake/logs/selecting_germline_variants_{names}.log"
     shell:
