@@ -18,6 +18,33 @@ for i in range(len(sample_list)):
         sample_names.append(samples)
         #print(sample_names)
 
+known_genes_list = []
+with open("/home/marie/TAA_somatic_snakemake/data/known_genes.txt", "r") as known_genes:
+    reader = csv.reader(known_genes)
+    next(reader)  # sla de header over: "symbol,chromosoom,start,stop"
+    for row in reader:
+        symbol, chrom, start, stop = row
+        known_genes_list.append({
+            "symbol": symbol,
+            "chromosome": chrom,
+            "start": int(start),
+            "stop": int(stop)
+        })
+
+
+hematopoëse_genes_list = []
+with open("/home/marie/TAA_somatic_snakemake/data/known_genes.txt", "r") as hema_genes:
+    reader = csv.reader(hema_genes)
+    next(reader)  # sla header over
+    for row in reader:
+        symbol, chrom, start, stop = row
+        hematopoëse_genes_list.append({
+            "symbol": symbol,
+            "chromosome": chrom,
+            "start": int(start),
+            "stop": int(stop)
+        })
+
 rule all:
     input:"/home/mhannaert/TAA_somatic_snakemake/results/01_multiqc/multiqc_report.html",
         "/home/mhannaert/TAA_somatic_snakemake/results/04_ATmultiqc/multiqc_report.html",
@@ -149,6 +176,7 @@ rule samtools:
         samtools sort {params.threads} {input} -o {output} 2>> {log}
         samtools index {params.threads} {output} 2>> {log}
         """ 
+
 rule AddReadGroups:
     input:
         "/home/mhannaert/TAA_somatic_snakemake/results/06_samtools/{names}_{type}.bam"
@@ -229,6 +257,25 @@ rule snp_to_vcf:
         python3 /home/mhannaert/TAA_somatic_snakemake/scripts/vs_format_converter.py {input.snp} >> {output.first} 2>> {log}
         bgzip -k {output.first}
         """
+rule Getting_germline_variants: 
+    input:
+        vcf="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz"
+    output:
+        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}_germline.vcf.gz"
+    log: 
+        "/home/mhannaert/TAA_somatic_snakemake/logs/getting_germline_variants_{names}.log"
+    shell:
+        """
+        bcftools view -i 'INFO/SS=1' {input} -Oz -o {output}
+        """
+#rule selecting_germline_variants:
+    #input:
+    #   "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}_germline.vcf.gz"
+    #output:
+    #    "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}_selected_germline.vcf.gz"
+    #log:
+    #   
+    #shell:
 
 rule fasta_dict: 
     input:
