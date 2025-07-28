@@ -1,4 +1,5 @@
 import os
+import csv
 
 CONDITIONS = ["1", "2"]
 TYPE = ["tumor", "blood"]
