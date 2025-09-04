@@ -233,7 +233,7 @@ rule selecting_hema:
         disease="/home/mhannaert/TAA_somatic_snakemake/logs/selecting_hema_{names}_tumor.log"
     shell:
         """
-        bedtools intersect -abam {input.bambloodfile} -b {input.bed} -v > {output.blood_to_disease} 2>> {log.blood} \
+        bedtools intersect -abam {input.bambloodfile} -b {input.bed} -v > {output.blood_to_disease} 2>> {log.blood} 
         bedtools intersect -abam {input.bamdiseasefile} -b {input.bed} -v > {output.disease_to_blood} 2>> {log.disease}
         """
 
