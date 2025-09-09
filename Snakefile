@@ -3,6 +3,7 @@ import csv
 
 CONDITIONS = ["1", "2"]
 TYPE = ["tumor", "blood"]
+FLOW = ["HEMA", "NORM"]
 
 # Define directories
 #REFDIR = os.getcwd()
@@ -52,10 +53,10 @@ rule all:
        #expand("results/09_variant_calling/mutect/{names}_somatic.vcf.gz", names=sample_names),
         #expand("results/09_variant_calling/varscan/{names}.vcf.gz", names=sample_names),
         #expand("results/09_variant_calling/somaticsniper/{names}.vcf.gz", names=sample_names),
-        expand("/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_HEMA_{names}_tumor.bam", names=sample_names),
-        expand("/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_HEMA_{names}_blood.bam", names=sample_names),
-        expand("/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/germline/{names}_selected_germline.vcf", names=sample_names),
-        expand("/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/{names}_consensus.vcf", names=sample_names)
+        #expand("/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_HEMA_{names}_tumor.bam", names=sample_names),
+        #expand("/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_HEMA_{names}_blood.bam", names=sample_names),
+        expand("/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/germline/{flow}_{names}_selected_germline.vcf", flow=FLOW, names=sample_names),
+        expand("/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/{flow}_{names}_consensus.vcf", flow=FLOW, names=sample_names)
         #expand("results/09_variant_calling/MuSE/{names}.vcf", names=sample_names)
         
 
@@ -208,10 +209,10 @@ rule Picard:
     input:
         "/home/mhannaert/TAA_somatic_snakemake/results/06_samtools/{names}_{type}_rg_sorted.bam"
     output:
-        bam="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_{type}.bam",
-        txt="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_dup_metrics_{names}_{type}.txt"
+        bam="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_NORM_{names}_{type}.bam",
+        txt="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_dup_metrics_NORM_{names}_{type}.txt"
     log: 
-        "/home/mhannaert/TAA_somatic_snakemake/logs/picard_{names}_{type}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/picard_NORM_{names}_{type}.log"
     params:
         regex="--READ_NAME_REGEX null",
         resources="--MAX_RECORDS_IN_RAM 2000000 --COMPRESSION_LEVEL 5"
@@ -222,8 +223,8 @@ rule Picard:
 
 rule selecting_hema:
     input:
-        bambloodfile="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_blood.bam",
-        bamdiseasefile="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_tumor.bam",
+        bambloodfile="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_NORM_{names}_blood.bam",
+        bamdiseasefile="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_NORM_{names}_tumor.bam",
         bed="/home/mhannaert/TAA_somatic_snakemake/data/Clonal_hematopoesis_genes.bed"
     output:
         blood_to_disease="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_HEMA_{names}_tumor.bam",
@@ -239,11 +240,11 @@ rule selecting_hema:
 
 rule mpileup:
     input: 
-        "/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_{type}.bam"
+        "/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{flow}_{names}_{type}.bam"
     output:
-        "/home/mhannaert/TAA_somatic_snakemake/results/08_mpileup/marked_duplicates_{names}_{type}.pileup"
+        "/home/mhannaert/TAA_somatic_snakemake/results/08_mpileup/marked_duplicates_{flow}_{names}_{type}.pileup"
     log: 
-        "/home/mhannaert/TAA_somatic_snakemake/logs/mpileup_{names}_{type}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/mpileup_{flow}_{names}_{type}.log"
     params: 
         ref="-f /home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta"
     shell: 
@@ -253,13 +254,13 @@ rule mpileup:
 
 rule Varscan: 
     input: 
-        disease="/home/mhannaert/TAA_somatic_snakemake/results/08_mpileup/marked_duplicates_{names}_tumor.pileup",
-        blood="/home/mhannaert/TAA_somatic_snakemake/results/08_mpileup/marked_duplicates_{names}_blood.pileup"
+        disease="/home/mhannaert/TAA_somatic_snakemake/results/08_mpileup/marked_duplicates_{flow}_{names}_tumor.pileup",
+        blood="/home/mhannaert/TAA_somatic_snakemake/results/08_mpileup/marked_duplicates_{flow}_{names}_blood.pileup"
     output: 
-        snp="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.snp",
-        indel="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.indel"
+        snp="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{flow}_{names}.snp",
+        indel="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{flow}_{names}.indel"
     log: 
-        "/home/mhannaert/TAA_somatic_snakemake/logs/varscan_{names}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/varscan_{flow}_{names}.log"
     #params: 
     shell: 
         """
@@ -268,12 +269,12 @@ rule Varscan:
 
 rule snp_to_vcf:
     input:
-        snp="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.snp"
+        snp="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{flow}_{names}.snp"
     output:
-        first="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf",
-        second="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz"
+        first="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{flow}_{names}.vcf",
+        second="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{flow}_{names}.vcf.gz"
     log:
-        "/home/mhannaert/TAA_somatic_snakemake/logs/convert_snp_vcf_{names}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/convert_snp_vcf_{flow}_{names}.log"
     shell:
         """
         python3 /home/mhannaert/TAA_somatic_snakemake/scripts/vs_format_converter.py {input.snp} >> {output.first} 2>> {log}
@@ -281,23 +282,23 @@ rule snp_to_vcf:
         """
 rule Getting_germline_variants: 
     input:
-        vcf="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz"
+        vcf="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{flow}_{names}.vcf.gz"
     output:
-        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/germline/{names}_germline.vcf.gz"
+        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/germline/{flow}_{names}_germline.vcf.gz"
     log: 
-        "/home/mhannaert/TAA_somatic_snakemake/logs/getting_germline_variants_{names}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/getting_germline_variants_{flow}_{names}.log"
     shell:
         """
         bcftools view -i 'SS="1"' {input} -Oz -o {output} 2>> {log}
         """
 rule selecting_germline_variants:
     input:
-        germ_file="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/germline/{names}_germline.vcf.gz",
+        germ_file="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/germline/{flow}_{names}_germline.vcf.gz",
         bed="/home/mhannaert/TAA_somatic_snakemake/data/known_genes.bed"
     output:
-        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/germline/{names}_selected_germline.vcf"
+        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/germline/{flow}_{names}_selected_germline.vcf"
     log:
-        "/home/mhannaert/TAA_somatic_snakemake/logs/selecting_germline_variants_{names}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/selecting_germline_variants_{flow}_{names}.log"
     shell:
         """
         zcat {input.germ_file} | bedtools intersect -a - -b {input.bed} -header > {output} 2>> {log}
@@ -316,11 +317,11 @@ rule fasta_dict:
         
 rule index:
     input:
-        "/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_{type}.bam"
+        "/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{flow}_{names}_{type}.bam"
     output: 
-        "/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_{type}.bam.bai"
+        "/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{flow}_{names}_{type}.bam.bai"
     log: 
-        "/home/mhannaert/TAA_somatic_snakemake/logs/index_dup_{names}_{type}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/index_dup_{flow}_{names}_{type}.log"
     params: 
         "-@ 32"
     shell: 
@@ -328,15 +329,15 @@ rule index:
 
 rule Mutect: 
     input: 
-        disease="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_tumor.bam",
-        blood="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_blood.bam",
-        index_d="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_tumor.bam.bai",
-        index_b="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_blood.bam.bai",
+        disease="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{flow}_{names}_tumor.bam",
+        blood="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{flow}_{names}_blood.bam",
+        index_d="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{flow}_{names}_tumor.bam.bai",
+        index_b="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{flow}_{names}_blood.bam.bai",
         ref_dict="/home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.dict"
     output: 
-       "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/{names}_somatic.vcf.gz"
+       "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/{flow}_{names}_somatic.vcf.gz"
     log: 
-        "/home/mhannaert/TAA_somatic_snakemake/logs/mutect_{names}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/mutect_{flow}_{names}.log"
     params: 
         ref="-R /home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta",
         threads="--native-pair-hmm-threads 16"
@@ -353,13 +354,13 @@ rule Mutect:
 
 rule Somaticsniper:
     input:
-        disease="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_tumor.bam",
-        blood="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{names}_blood.bam"
+        disease="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{flow}_{names}_tumor.bam",
+        blood="/home/mhannaert/TAA_somatic_snakemake/results/07_picard/marked_duplicates_{flow}_{names}_blood.bam"
     output:
-        first="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{names}.vcf",
-        second="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{names}.vcf.gz"
+        first="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{flow}_{names}.vcf",
+        second="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{flow}_{names}.vcf.gz"
     log:
-        "/home/mhannaert/TAA_somatic_snakemake/logs/somaticsniper_{names}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/somaticsniper_{flow}_{names}.log"
     params: 
         ref="-f /home/mhannaert/TAA_somatic_snakemake/data/ref_data/hg38.fasta",
         format="-F vcf",
@@ -372,15 +373,15 @@ rule Somaticsniper:
 
 rule index_tbi:
     input:
-        mutect="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/{names}_somatic.vcf.gz",
-        somaticsniper="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{names}.vcf.gz",
-        varscan="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz"
+        mutect="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/{flow}_{names}_somatic.vcf.gz",
+        somaticsniper="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{flow}_{names}.vcf.gz",
+        varscan="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{flow}_{names}.vcf.gz"
     output:
-        mutect="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/{names}_somatic.vcf.gz.tbi",
-        somaticsniper="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{names}.vcf.gz.tbi",
-        varscan="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz.tbi"
+        mutect="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/{flow}_{names}_somatic.vcf.gz.tbi",
+        somaticsniper="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{flow}_{names}.vcf.gz.tbi",
+        varscan="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{flow}_{names}.vcf.gz.tbi"
     log: 
-        "/home/mhannaert/TAA_somatic_snakemake/logs/index_tbi_{names}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/index_tbi_{flow}_{names}.log"
     params:
         threads="-@ 32",
         filetype="-p vcf"
@@ -391,18 +392,38 @@ rule index_tbi:
         tabix {params.threads} {params.filetype} {input.varscan} 2>> {log}
         """
 
-rule consensus_bcftools:
+rule consensus_bcftools_norm:
     input:
-        mutect="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/{names}_somatic.vcf.gz",
-        somaticsniper="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{names}.vcf.gz",
-        varscan="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz",
-        mutect_tbi="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/{names}_somatic.vcf.gz.tbi",
-        somaticsniper_tbi="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/{names}.vcf.gz.tbi",
-        varscan_tbi="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/{names}.vcf.gz.tbi"
+        mutect="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/NORM_{names}_somatic.vcf.gz",
+        somaticsniper="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/NORM_{names}.vcf.gz",
+        varscan="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/NORM_{names}.vcf.gz",
+        mutect_tbi="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/NORM_{names}_somatic.vcf.gz.tbi",
+        somaticsniper_tbi="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/NORM_{names}.vcf.gz.tbi",
+        varscan_tbi="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/NORM_{names}.vcf.gz.tbi"
     output:
-        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/{names}_consensus.vcf"
+        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/NORM_{names}_consensus.vcf"
     log: 
-        "/home/mhannaert/TAA_somatic_snakemake/logs/consensus_bcf_{names}.log"
+        "/home/mhannaert/TAA_somatic_snakemake/logs/consensus_bcf_NORM_{names}.log"
+    params: 
+        appear_number= "-n+2", #the -n+2 is for variants in at least 2 out of 3
+        metadata= "-w1", #without metadata, only variants records
+        threads="--threads 32"
+    shell: 
+        """
+        bcftools isec {params.threads} {params.appear_number} {params.metadata} -o {output} {input.mutect} {input.somaticsniper} {input.varscan} 2>> {log}
+        """
+rule consensus_bcftools_hema:
+    input:
+        mutect="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/HEMA_{names}_somatic.vcf.gz",
+        somaticsniper="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/HEMA_{names}.vcf.gz",
+        varscan="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/HEMA_{names}.vcf.gz",
+        mutect_tbi="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/mutect/HEMA_{names}_somatic.vcf.gz.tbi",
+        somaticsniper_tbi="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/somaticsniper/HEMA_{names}.vcf.gz.tbi",
+        varscan_tbi="/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/varscan/HEMA_{names}.vcf.gz.tbi"
+    output:
+        "/home/mhannaert/TAA_somatic_snakemake/results/09_variant_calling/HEMA_{names}_consensus.vcf"
+    log: 
+        "/home/mhannaert/TAA_somatic_snakemake/logs/consensus_bcf_HEMA_{names}.log"
     params: 
         appear_number= "-n+2", #the -n+2 is for variants in at least 2 out of 3
         metadata= "-w1", #without metadata, only variants records
